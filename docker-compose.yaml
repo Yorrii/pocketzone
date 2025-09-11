@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: pocketzone
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file: .env
+    environment:
+      # fallback kdyby nebyl .env
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/pocketzone}
+      PORT: "5001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "5001:5001"     # host:container
+    # užitečné při vývoji: mapovat kód a autoreload – volitelně
+    # volumes:
+    #   - ./backend:/app
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    restart: always
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8081:8081"
+
+volumes:
+  mongo_data:
