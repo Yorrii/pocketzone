@@ -17,7 +17,7 @@ class App extends StatelessWidget {
 
     return MaterialApp.router(
       title: 'Pocket Zone',
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: ThemeData.light(useMaterial3: true),
       routerConfig: router,
     );
   }
